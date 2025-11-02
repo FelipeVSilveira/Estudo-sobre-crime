@@ -1,0 +1,141 @@
+---
+title: "Estudo sobre crimes"
+author: "Felipe Silveira"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Instalar pacotes 
+
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+
+# Carregando os dados
+
+dados_seguranca <- read_csv('/Users/felipesilveira/RStudio/Estudo sobre crimes/br_fbsp_absp_municipio.csv')
+
+# Verificando estrutura
+
+glimpse(dados_seguranca)
+
+# Primeiras linhas
+head(dados_seguranca)
+
+# Resumo estatístico
+summary(dados_seguranca)
+
+# Transformando algumas colunas em tipo factor
+dados_limpos <- dados_seguranca |> 
+  mutate(
+    ano = as.factor(ano),
+    sigla_uf = as.factor(sigla_uf),
+    grupo = as.factor(grupo)
+  )
+
+## EDA
+
+# 1. Como as mortes violentas evoluíram ao longo dos anos no Brasil?
+# Agrupar por ano e somar mortes violentas
+evolucao_brasil <- dados_limpos |> 
+  group_by(ano) |> 
+  summarise(
+    total_mortes_violentas = sum(quantidade_mortes_violentas_intencionais, na.rm = TRUE),
+    total_homicidios = sum(quantidade_homicidio_doloso, na.rm = TRUE)
+  )
+
+print(evolucao_brasil)
+
+# Visualização de mortes violentas
+ggplot(evolucao_brasil, aes(x = ano, y = total_mortes_violentas, group = 1)) +
+  geom_line(color = "red", size = 1.5) +
+  geom_point(color = "red", size = 3) +
+  labs(
+    title = "Evolução das mortes violentas intencionais no Brasil(Municípios da amostra)",
+    x = "Ano",
+    y = "Quantidade total"
+  ) +
+  theme_minimal()
+
+# 2. Quais estados tiveram mais homicídios dolosos no último ano registrado?
+# Encontrar último ano
+ultimo_ano <- max(as.numeric(as.character(dados_limpos$ano)))
+
+# Filtrar pelo ano, agrupar por UF e ordenar
+ranking_uf <- dados_limpos |> 
+  filter(ano == ultimo_ano) |> 
+  group_by(sigla_uf) |> 
+  summarise(
+    total_homicidios = sum(quantidade_homicidio_doloso, na.rm = TRUE)
+  ) |> 
+  arrange(desc(total_homicidios))
+
+print(ranking_uf)
+
+# Gráfico de barras com os 10 primeiros
+ggplot(head(ranking_uf, 10), aes(x = reorder(sigla_uf, total_homicidios), y = total_homicidios)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  coord_flip() +
+  labs(
+    title = paste("Top 10 UFs por homicídio doloso em", ultimo_ano),
+    x = "UF",
+    y = "Quantidade total de homicídios"
+  ) +
+  theme_bw()
+
+#Existe relação entr roubo de veículos e tráfico de entorpecentes?
+# Selecionar colunas e remover NAs
+dados_correlacao <- dados_limpos |> 
+  select(
+    quantidade_roubo_furto_veiculos,
+    quantidade_trafico_entorpecente
+  ) |> 
+  na.omit() 
+
+# Calcular a correlação
+cor(dados_correlacao$quantidade_roubo_furto_veiculos, dados_correlacao$quantidade_trafico_entorpecente)
+
+# Visualizar a correlação com um gráfico de dispersão (scatterplot)
+ggplot(dados_correlacao, aes(x = quantidade_roubo_furto_veiculos, y = quantidade_trafico_entorpecente)) +
+  geom_point(alpha = 0.5) + # alpha = transparência
+  geom_smooth(method = "lm", color = "blue") + # Adiciona uma linha de tendência
+  labs(
+    title = "Correlação entre Roubo/Furto de Veículos e Tráfico",
+    x = "Roubo e Furto de Veículos",
+    y = "Tráfico de Entorpecentes"
+  ) +
+  theme_light()
+
+# Total de feminicidios
+total_feminicidios <- dados_limpos |> 
+  summarise(
+    total_geral = sum(quantidade_feminicidio, na.rm = TRUE)
+  )
+
+print(total_feminicidios)
+
+# Total por estado
+ 
+
+# Quantidade de feminicidios por ano
+feminicidios_por_ano <- dados_limpos |> 
+  group_by(ano) |> 
+  summarise(
+    total_anual = sum(quantidade_feminicidio, na.rm = TRUE)
+  ) |> 
+  arrange(ano)
+
+# Visualizando em gráficos
+ggplot(feminicidios_por_ano, aes(x = as.factor(ano), y = total_anual, group = 1)) +
+  geom_line(color = "purple", size = 1.2) +
+  geom_point(color = "purple", size = 2.5) +
+  labs(
+    title = "Evolução dos Feminicídios por Ano (na amostra)",
+    x = "Ano",
+    y = "Quantidade Total de Feminicídios"
+  ) +
+  theme_minimal()

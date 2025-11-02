@@ -1,0 +1,200 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+\documentclass[
+]{article}
+\usepackage{xcolor}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{graphicx}
+\makeatletter
+\newsavebox\pandoc@box
+\newcommand*\pandocbounded[1]{% scales image to fit in text height/width
+  \sbox\pandoc@box{#1}%
+  \Gscale@div\@tempa{\textheight}{\dimexpr\ht\pandoc@box+\dp\pandoc@box\relax}%
+  \Gscale@div\@tempb{\linewidth}{\wd\pandoc@box}%
+  \ifdim\@tempb\p@<\@tempa\p@\let\@tempa\@tempb\fi% select the smaller of both
+  \ifdim\@tempa\p@<\p@\scalebox{\@tempa}{\usebox\pandoc@box}%
+  \else\usebox{\pandoc@box}%
+  \fi%
+}
+% Set default figure placement to htbp
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\usepackage{bookmark}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  pdftitle={Estudo sobre crimes},
+  pdfauthor={Felipe Silveira},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\title{Estudo sobre crimes}
+\author{Felipe Silveira}
+\date{2025-11-02}
+
+\begin{document}
+\maketitle
+
+\section{Instalar pacotes}\label{instalar-pacotes}
+
+library(tidyverse) library(dplyr) library(ggplot2)
+
+\section{Carregando os dados}\label{carregando-os-dados}
+
+dados\_seguranca \textless-
+read\_csv(`/Users/felipesilveira/RStudio/Estudo sobre
+crimes/br\_fbsp\_absp\_municipio.csv')
+
+\section{Verificando estrutura}\label{verificando-estrutura}
+
+glimpse(dados\_seguranca)
+
+\section{Primeiras linhas}\label{primeiras-linhas}
+
+head(dados\_seguranca)
+
+\section{Resumo estatístico}\label{resumo-estatuxedstico}
+
+summary(dados\_seguranca)
+
+\section{Transformando algumas colunas em tipo
+factor}\label{transformando-algumas-colunas-em-tipo-factor}
+
+dados\_limpos \textless- dados\_seguranca \textbar\textgreater{} mutate(
+ano = as.factor(ano), sigla\_uf = as.factor(sigla\_uf), grupo =
+as.factor(grupo) )
+
+\subsection{EDA}\label{eda}
+
+\section{1. Como as mortes violentas evoluíram ao longo dos anos no
+Brasil?}\label{como-as-mortes-violentas-evoluuxedram-ao-longo-dos-anos-no-brasil}
+
+\section{Agrupar por ano e somar mortes
+violentas}\label{agrupar-por-ano-e-somar-mortes-violentas}
+
+evolucao\_brasil \textless- dados\_limpos \textbar\textgreater{}
+group\_by(ano) \textbar\textgreater{} summarise(
+total\_mortes\_violentas =
+sum(quantidade\_mortes\_violentas\_intencionais, na.rm = TRUE),
+total\_homicidios = sum(quantidade\_homicidio\_doloso, na.rm = TRUE) )
+
+print(evolucao\_brasil)
+
+\section{Visualização de mortes
+violentas}\label{visualizauxe7uxe3o-de-mortes-violentas}
+
+ggplot(evolucao\_brasil, aes(x = ano, y = total\_mortes\_violentas,
+group = 1)) + geom\_line(color = ``red'', size = 1.5) +
+geom\_point(color = ``red'', size = 3) + labs( title = ``Evolução das
+mortes violentas intencionais no Brasil(Municípios da amostra)'', x =
+``Ano'', y = ``Quantidade total'' ) + theme\_minimal()
+
+\section{2. Quais estados tiveram mais homicídios dolosos no último ano
+registrado?}\label{quais-estados-tiveram-mais-homicuxeddios-dolosos-no-uxfaltimo-ano-registrado}
+
+\section{Encontrar último ano}\label{encontrar-uxfaltimo-ano}
+
+ultimo\_ano \textless- max(as.numeric(as.character(dados\_limpos\$ano)))
+
+\section{Filtrar pelo ano, agrupar por UF e
+ordenar}\label{filtrar-pelo-ano-agrupar-por-uf-e-ordenar}
+
+ranking\_uf \textless- dados\_limpos \textbar\textgreater{} filter(ano
+== ultimo\_ano) \textbar\textgreater{} group\_by(sigla\_uf)
+\textbar\textgreater{} summarise( total\_homicidios =
+sum(quantidade\_homicidio\_doloso, na.rm = TRUE) )
+\textbar\textgreater{} arrange(desc(total\_homicidios))
+
+print(ranking\_uf)
+
+\section{Gráfico de barras com os 10
+primeiros}\label{gruxe1fico-de-barras-com-os-10-primeiros}
+
+ggplot(head(ranking\_uf, 10), aes(x = reorder(sigla\_uf,
+total\_homicidios), y = total\_homicidios)) + geom\_bar(stat =
+``identity'', fill = ``steelblue'') + coord\_flip() + labs( title =
+paste(``Top 10 UFs por homicídio doloso em'', ultimo\_ano), x = ``UF'',
+y = ``Quantidade total de homicídios'' ) + theme\_bw()
+
+\#Existe relação entr roubo de veículos e tráfico de entorpecentes? \#
+Selecionar colunas e remover NAs dados\_correlacao \textless-
+dados\_limpos \textbar\textgreater{} select(
+quantidade\_roubo\_furto\_veiculos, quantidade\_trafico\_entorpecente )
+\textbar\textgreater{} na.omit()
+
+\section{Calcular a correlação}\label{calcular-a-correlauxe7uxe3o}
+
+cor(dados\_correlacao\(quantidade_roubo_furto_veiculos, dados_correlacao\)quantidade\_trafico\_entorpecente)
+
+\section{Visualizar a correlação com um gráfico de dispersão
+(scatterplot)}\label{visualizar-a-correlauxe7uxe3o-com-um-gruxe1fico-de-dispersuxe3o-scatterplot}
+
+ggplot(dados\_correlacao, aes(x = quantidade\_roubo\_furto\_veiculos, y
+= quantidade\_trafico\_entorpecente)) + geom\_point(alpha = 0.5) + \#
+alpha = transparência geom\_smooth(method = ``lm'', color = ``blue'') +
+\# Adiciona uma linha de tendência labs( title = ``Correlação entre
+Roubo/Furto de Veículos e Tráfico'', x = ``Roubo e Furto de Veículos'',
+y = ``Tráfico de Entorpecentes'' ) + theme\_light()
+
+\section{Total de feminicidios}\label{total-de-feminicidios}
+
+total\_feminicidios \textless- dados\_limpos \textbar\textgreater{}
+summarise( total\_geral = sum(quantidade\_feminicidio, na.rm = TRUE) )
+
+print(total\_feminicidios)
+
+\section{Total por estado}\label{total-por-estado}
+
+\section{Quantidade de feminicidios por
+ano}\label{quantidade-de-feminicidios-por-ano}
+
+feminicidios\_por\_ano \textless- dados\_limpos \textbar\textgreater{}
+group\_by(ano) \textbar\textgreater{} summarise( total\_anual =
+sum(quantidade\_feminicidio, na.rm = TRUE) ) \textbar\textgreater{}
+arrange(ano)
+
+\section{Visualizando em gráficos}\label{visualizando-em-gruxe1ficos}
+
+ggplot(feminicidios\_por\_ano, aes(x = as.factor(ano), y = total\_anual,
+group = 1)) + geom\_line(color = ``purple'', size = 1.2) +
+geom\_point(color = ``purple'', size = 2.5) + labs( title = ``Evolução
+dos Feminicídios por Ano (na amostra)'', x = ``Ano'', y = ``Quantidade
+Total de Feminicídios'' ) + theme\_minimal()
+
+\end{document}
